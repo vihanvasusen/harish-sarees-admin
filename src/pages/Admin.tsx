@@ -3,7 +3,7 @@ import { useAdmin } from "@/contexts/AdminContext";
 import { useNavigate } from "react-router-dom";
 import AdminLogin from "@/pages/AdminLogin";
 import { Package, ShoppingCart, Star, LogOut, Plus, Pencil, Trash2, Check, X } from "lucide-react";
-import type { Product } from "@/data/products";
+import type { Product, Order } from "@/data/products";
 
 const Admin = () => {
   const { isAdmin, logout, products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, reviews, approveReview, deleteReview } = useAdmin();
