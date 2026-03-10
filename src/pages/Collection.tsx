@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import { useAdmin } from "@/contexts/AdminContext";
+import type { Product } from "@/contexts/AdminContext";
 
 const Collection = () => {
   const { products } = useAdmin();

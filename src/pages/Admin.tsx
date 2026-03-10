@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAdmin } from "@/contexts/AdminContext";
+import type { Product, Order } from "@/contexts/AdminContext";
 import AdminLogin from "@/pages/AdminLogin";
 import { Package, ShoppingCart, Star, LogOut, Plus, Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
-import type { Product, Order } from "@/data/products";
 
 const Admin = () => {
   const { isAdmin, loading, logout, products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, reviews, approveReview, deleteReview } = useAdmin();
@@ -20,9 +20,7 @@ const Admin = () => {
 
   if (!isAdmin) return <AdminLogin />;
 
-  const handleLogout = async () => {
-    await logout();
-  };
+  const handleLogout = async () => { await logout(); };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -55,11 +53,8 @@ const Admin = () => {
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-secondary rounded-lg p-1 w-fit">
         {(["products", "orders", "reviews"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => { setTab(t); setShowForm(false); setEditingProduct(null); }}
-            className={`px-4 py-2 rounded-md text-sm font-body capitalize transition-colors ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
+          <button key={t} onClick={() => { setTab(t); setShowForm(false); setEditingProduct(null); }}
+            className={`px-4 py-2 rounded-md text-sm font-body capitalize transition-colors ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
             {t}
           </button>
         ))}
@@ -91,13 +86,11 @@ const Admin = () => {
             </>
           )}
           {(showForm || editingProduct) && (
-            <ProductForm
-              product={editingProduct}
-              onSave={(data) => {
-                if (editingProduct) { updateProduct(editingProduct.id, data); }
-                else { addProduct(data as Omit<Product, "id">); }
-                setShowForm(false);
-                setEditingProduct(null);
+            <ProductForm product={editingProduct}
+              onSave={async (data) => {
+                if (editingProduct) { await updateProduct(editingProduct.id, data); }
+                else { await addProduct(data as Omit<Product, "id">); }
+                setShowForm(false); setEditingProduct(null);
               }}
               onCancel={() => { setShowForm(false); setEditingProduct(null); }}
             />
@@ -113,7 +106,7 @@ const Admin = () => {
             <div key={o.id} className="bg-card border border-border rounded-lg p-5">
               <div className="flex flex-col sm:flex-row justify-between gap-2 mb-3">
                 <div>
-                  <h3 className="font-heading font-semibold text-foreground">{o.id} — {o.customerName}</h3>
+                  <h3 className="font-heading font-semibold text-foreground">{o.orderNumber} — {o.customerName}</h3>
                   <p className="text-sm text-muted-foreground font-body">{o.customerPhone} • {o.customerEmail}</p>
                   <p className="text-sm text-muted-foreground font-body">{o.customerAddress}</p>
                 </div>
@@ -126,11 +119,8 @@ const Admin = () => {
                 {o.items.map((item, i) => <p key={i}>{item.productName} × {item.quantity} = ₹{(item.price * item.quantity).toLocaleString()}</p>)}
               </div>
               {o.paymentScreenshot && <img src={o.paymentScreenshot} alt="Payment" className="w-40 h-auto rounded border border-border mb-3" />}
-              <select
-                value={o.status}
-                onChange={(e) => updateOrderStatus(o.id, e.target.value as Order["status"])}
-                className="px-3 py-1.5 rounded border border-input bg-background text-foreground text-sm font-body"
-              >
+              <select value={o.status} onChange={(e) => updateOrderStatus(o.id, e.target.value as Order["status"])}
+                className="px-3 py-1.5 rounded border border-input bg-background text-foreground text-sm font-body">
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
                 <option value="shipped">Shipped</option>
@@ -187,10 +177,7 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Product | null; o
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      name, price: Number(price), originalPrice: originalPrice ? Number(originalPrice) : undefined,
-      description, category, image, inStock, featured,
-    });
+    onSave({ name, price: Number(price), originalPrice: originalPrice ? Number(originalPrice) : undefined, description, category, image, inStock, featured });
   };
 
   return (
@@ -205,24 +192,15 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Product | null; o
       ].map((f) => (
         <div key={f.label}>
           <label className="block text-sm font-body text-foreground mb-1">{f.label}</label>
-          <input
-            type={f.type}
-            value={f.value}
-            onChange={(e) => f.set(e.target.value)}
+          <input type={f.type} value={f.value} onChange={(e) => f.set(e.target.value)}
             className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            required={f.label !== "Original Price (₹, optional)"}
-          />
+            required={f.label !== "Original Price (₹, optional)"} />
         </div>
       ))}
       <div>
         <label className="block text-sm font-body text-foreground mb-1">Description</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          required
-        />
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
+          className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring" required />
       </div>
       <div className="flex gap-6">
         <label className="flex items-center gap-2 text-sm font-body text-foreground">
@@ -236,9 +214,7 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Product | null; o
         <button type="submit" className="bg-primary text-primary-foreground px-6 py-2 rounded-md text-sm font-body font-semibold hover:opacity-90 transition-opacity">
           {product ? "Update" : "Add"} Product
         </button>
-        <button type="button" onClick={onCancel} className="text-muted-foreground text-sm font-body hover:text-foreground transition-colors">
-          Cancel
-        </button>
+        <button type="button" onClick={onCancel} className="text-muted-foreground text-sm font-body hover:text-foreground transition-colors">Cancel</button>
       </div>
     </form>
   );

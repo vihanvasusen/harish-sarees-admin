@@ -1,4 +1,4 @@
-import { Product } from "@/data/products";
+import type { Product } from "@/contexts/AdminContext";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag } from "lucide-react";
 
