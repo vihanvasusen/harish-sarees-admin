@@ -1,22 +1,27 @@
 import { useState } from "react";
 import { useAdmin } from "@/contexts/AdminContext";
-import { useNavigate } from "react-router-dom";
 import AdminLogin from "@/pages/AdminLogin";
-import { Package, ShoppingCart, Star, LogOut, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Package, ShoppingCart, Star, LogOut, Plus, Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
 import type { Product, Order } from "@/data/products";
 
 const Admin = () => {
-  const { isAdmin, logout, products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, reviews, approveReview, deleteReview } = useAdmin();
-  const navigate = useNavigate();
+  const { isAdmin, loading, logout, products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, reviews, approveReview, deleteReview } = useAdmin();
   const [tab, setTab] = useState<"products" | "orders" | "reviews">("products");
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (!isAdmin) return <AdminLogin />;
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (

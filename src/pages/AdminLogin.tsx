@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useAdmin } from "@/contexts/AdminContext";
-import { useNavigate } from "react-router-dom";
 
 const AdminLogin = () => {
   const { login } = useAdmin();
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(email, password)) {
-      navigate("/admin");
-    } else {
-      setError("Invalid email or password");
+    setError("");
+    setSubmitting(true);
+    const result = await login(email, password);
+    if (result.error) {
+      setError(result.error);
     }
+    setSubmitting(false);
   };
 
   return (
@@ -49,9 +50,10 @@ const AdminLogin = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground py-2.5 rounded-md font-body font-semibold hover:opacity-90 transition-opacity"
+            disabled={submitting}
+            className="w-full bg-primary text-primary-foreground py-2.5 rounded-md font-body font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            Login
+            {submitting ? "Signing in..." : "Login"}
           </button>
         </form>
       </div>

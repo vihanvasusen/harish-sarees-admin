@@ -1,10 +1,13 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Product, Order, Review, defaultProducts, defaultOrders, defaultReviews } from "@/data/products";
+import type { Session } from "@supabase/supabase-js";
 
 interface AdminContextType {
   isAdmin: boolean;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
   products: Product[];
   addProduct: (product: Omit<Product, "id">) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
@@ -18,11 +21,9 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-const ADMIN_EMAIL = "vihan.vasusen@gmail.com";
-const ADMIN_PASSWORD = "harish2026";
-
 export const AdminProvider = ({ children }: { children: ReactNode }) => {
-  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem("harish-admin") === "true");
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem("harish-products");
     return saved ? JSON.parse(saved) : defaultProducts;
@@ -36,20 +37,30 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     return saved ? JSON.parse(saved) : defaultReviews;
   });
 
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const save = (key: string, data: unknown) => localStorage.setItem(key, JSON.stringify(data));
 
-  const login = (email: string, password: string) => {
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      localStorage.setItem("harish-admin", "true");
-      return true;
-    }
-    return false;
+  const login = async (email: string, password: string): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    return { error: null };
   };
 
-  const logout = () => {
-    setIsAdmin(false);
-    localStorage.removeItem("harish-admin");
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   const addProduct = (product: Omit<Product, "id">) => {
@@ -90,7 +101,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AdminContext.Provider value={{ isAdmin, login, logout, products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, reviews, approveReview, deleteReview }}>
+    <AdminContext.Provider value={{ isAdmin: !!session, loading, login, logout, products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, reviews, approveReview, deleteReview }}>
       {children}
     </AdminContext.Provider>
   );
